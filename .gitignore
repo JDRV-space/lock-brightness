@@ -1,0 +1,9 @@
+brightness-ctl
+*.log
+*.log.1
+*.log.2
+*.dSYM/
+.build/
+.swiftpm/
+xcuserdata/
+.DS_Store

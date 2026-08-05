@@ -6,6 +6,11 @@
 - Reject non-finite brightness values before calling the private DisplayServices API.
 - Reject zero or invalid polling intervals to avoid tight daemon loops.
 - Add static local checks and make `make test` exit nonzero on failed assertions.
+- Retry failed restores without adopting the unwanted brightness value.
+- Reset failure tracking after successful reads and writes.
+- Make install configuration persistent and validate the rendered LaunchAgent.
+- Make start failures return nonzero and consolidate errors in the rotated log.
+- Remove all application-owned files during complete or partial uninstall.
 
 ## [1.0.0] - 2026-03-08
 

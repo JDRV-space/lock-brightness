@@ -6,6 +6,12 @@ labels: bug
 assignees: ''
 ---
 
+Security vulnerabilities should not be disclosed in a public issue. Follow
+[SECURITY.md](../../SECURITY.md) instead.
+
+**Source commit and helper version**
+<!-- Output of: git rev-parse HEAD; ~/.lock-brightness/bin/brightness-ctl version -->
+
 **macOS version**
 <!-- Output of: sw_vers -->
 
@@ -22,4 +28,4 @@ assignees: ''
 <!-- What should have happened -->
 
 **Logs**
-<!-- Paste relevant lines from: cat ~/.lock-brightness/lock-brightness.log -->
+<!-- Review and redact sensitive details, then paste relevant lines from: tail -n 50 ~/.lock-brightness/lock-brightness.log -->

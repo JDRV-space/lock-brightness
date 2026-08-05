@@ -2,7 +2,7 @@
 # lock-brightness: Prevent macOS from changing brightness on power source changes
 #
 # How it works:
-#   1. Polls power state every 2 seconds (negligible CPU, zero GPU)
+#   1. Polls power state every 2 seconds by default (negligible CPU, zero GPU)
 #   2. When charger is plugged/unplugged, restores brightness to the last known value
 #   3. Manual brightness changes are respected and become the new locked value
 #
@@ -57,6 +57,8 @@ cleanup() {
 trap cleanup SIGTERM SIGINT
 
 validate_poll_interval
+rotate_log
+exec 2>> "$LOG"
 
 # Check for stale instances
 if [ -f "$PIDFILE" ]; then
@@ -78,7 +80,6 @@ fi
 # Write PID file
 echo $$ > "$PIDFILE"
 
-rotate_log
 log_msg "Started (PID $$)"
 
 # Capture initial state
@@ -94,6 +95,7 @@ fi
 log_msg "Power: $LAST_STATE | Brightness: $LOCKED_BRIGHTNESS"
 
 FAIL_COUNT=0
+RESTORE_PENDING=0
 
 while true; do
     STATE=$(pmset -g batt | head -1 | grep -o "'.*'" | tr -d "'")
@@ -111,6 +113,19 @@ while true; do
         if "$CTL" set "$LOCKED_BRIGHTNESS" 2>/dev/null; then
             log_msg "Power: $LAST_STATE -> $STATE | Restored brightness to $LOCKED_BRIGHTNESS"
             FAIL_COUNT=0
+            RESTORE_PENDING=0
+        else
+            FAIL_COUNT=$((FAIL_COUNT + 1))
+            RESTORE_PENDING=1
+            log_msg "WARN: failed to restore brightness (attempt $FAIL_COUNT/$MAX_FAILURES)"
+        fi
+    elif [ "$RESTORE_PENDING" -eq 1 ]; then
+        # Keep retrying the original value. Do not adopt the unwanted value
+        # that macOS applied during the power-source change.
+        if "$CTL" set "$LOCKED_BRIGHTNESS" 2>/dev/null; then
+            log_msg "Restored brightness to $LOCKED_BRIGHTNESS after retry"
+            FAIL_COUNT=0
+            RESTORE_PENDING=0
         else
             FAIL_COUNT=$((FAIL_COUNT + 1))
             log_msg "WARN: failed to restore brightness (attempt $FAIL_COUNT/$MAX_FAILURES)"
@@ -119,9 +134,12 @@ while true; do
         # No power change. Track manual brightness adjustments so we
         # always restore to the user's preferred level.
         CURRENT=$("$CTL" get 2>/dev/null || echo "")
-        if [ -n "$CURRENT" ] && [ "$CURRENT" != "$LOCKED_BRIGHTNESS" ]; then
-            LOCKED_BRIGHTNESS="$CURRENT"
-        elif [ -z "$CURRENT" ]; then
+        if [ -n "$CURRENT" ]; then
+            FAIL_COUNT=0
+            if [ "$CURRENT" != "$LOCKED_BRIGHTNESS" ]; then
+                LOCKED_BRIGHTNESS="$CURRENT"
+            fi
+        else
             FAIL_COUNT=$((FAIL_COUNT + 1))
             log_msg "WARN: brightness read failed (attempt $FAIL_COUNT/$MAX_FAILURES)"
         fi

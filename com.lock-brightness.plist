@@ -12,6 +12,8 @@
     <dict>
         <key>LOCK_BRIGHTNESS_DIR</key>
         <string>__INSTALL_DIR__</string>
+        <key>LOCK_BRIGHTNESS_INTERVAL</key>
+        <string>__POLL_INTERVAL__</string>
     </dict>
     <key>RunAtLoad</key>
     <true/>
@@ -20,7 +22,7 @@
     <key>ProcessType</key>
     <string>Background</string>
     <key>StandardErrorPath</key>
-    <string>__INSTALL_DIR__/stderr.log</string>
+    <string>__INSTALL_DIR__/lock-brightness.log</string>
     <key>ThrottleInterval</key>
     <integer>30</integer>
 </dict>
